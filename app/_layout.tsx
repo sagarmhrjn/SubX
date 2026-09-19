@@ -1,9 +1,11 @@
 import '@/global.css';
-import { ClerkLoaded, ClerkLoading, ClerkProvider, useAuth } from '@clerk/expo';
+import { ClerkLoaded, ClerkLoading, ClerkProvider, useAuth, useUser } from '@clerk/expo';
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { PostHogProvider } from 'posthog-react-native';
+import { posthog } from '@/lib/posthog';
 import { tokenCache } from '@/lib/token-cache';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
@@ -15,6 +17,42 @@ if (!publishableKey) {
 }
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+function PostHogIdentity() {
+  const { isLoaded, user } = useUser();
+  const identifiedUserId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded || !posthog) return;
+
+    if (!user) {
+      if (identifiedUserId.current) {
+        posthog.reset();
+        identifiedUserId.current = null;
+      }
+      return;
+    }
+
+    if (identifiedUserId.current === user.id) return;
+
+    if (identifiedUserId.current) {
+      posthog.reset();
+    }
+
+    const email = user.primaryEmailAddress?.emailAddress;
+
+    posthog.identify(user.id, {
+      $set: {
+        ...(email ? { email } : {}),
+        ...(user.firstName ? { first_name: user.firstName } : {}),
+        ...(user.lastName ? { last_name: user.lastName } : {}),
+      },
+    });
+    identifiedUserId.current = user.id;
+  }, [isLoaded, user]);
+
+  return null;
+}
 
 function InitialLayout() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -77,7 +115,14 @@ export default function RootLayout() {
         </View>
       </ClerkLoading>
       <ClerkLoaded>
-        <InitialLayout />
+        <PostHogIdentity />
+        {posthog ? (
+          <PostHogProvider client={posthog}>
+            <InitialLayout />
+          </PostHogProvider>
+        ) : (
+          <InitialLayout />
+        )}
       </ClerkLoaded>
     </ClerkProvider>
   );

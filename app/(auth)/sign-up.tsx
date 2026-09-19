@@ -2,6 +2,7 @@ import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthHeader } from '@/components/auth/AuthHeader';
 import { AuthInput } from '@/components/auth/AuthInput';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
+import { posthog } from '@/lib/posthog';
 import {
   getPasswordStrength,
   validateCode,
@@ -116,6 +117,7 @@ export default function SignUpScreen() {
         return;
       }
 
+      posthog?.capture('sign_up_verification_requested');
       setPendingVerification(true);
       setResendTimer(30);
       setCanResend(false);
@@ -151,6 +153,7 @@ export default function SignUpScreen() {
 
       if (signUp.status === 'complete') {
         await signUp.finalize();
+        posthog?.capture('sign_up_completed');
         router.replace('/(tabs)');
       } else {
         setGeneralError('Additional verification required to finish setup.');
@@ -171,6 +174,7 @@ export default function SignUpScreen() {
       if (sendRes?.error) {
         setGeneralError(getAuthErrorMessage(sendRes.error));
       } else {
+        posthog?.capture('sign_up_verification_resent');
         setResendTimer(30);
         setCanResend(false);
       }

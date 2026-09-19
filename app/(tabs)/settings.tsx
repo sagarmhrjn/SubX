@@ -1,4 +1,5 @@
 import images from '@/constants/images';
+import { posthog } from '@/lib/posthog';
 import { useClerk, useUser } from '@clerk/expo';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -34,6 +35,7 @@ export default function Settings() {
             } catch {
               // Ignore
             }
+            posthog?.capture('sign_out_requested');
             await signOut();
           },
         },

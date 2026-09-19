@@ -4,6 +4,7 @@ import { AuthInput } from '@/components/auth/AuthInput';
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { validateEmail, validatePassword } from '@/lib/auth-validation';
+import { posthog } from '@/lib/posthog';
 import { useSignIn } from '@clerk/expo';
 import { Link, useRouter } from 'expo-router';
 import { styled } from 'nativewind';
@@ -68,6 +69,7 @@ export default function SignInScreen() {
 
       if (signIn.status === 'complete') {
         await signIn.finalize();
+        posthog?.capture('sign_in_completed');
         router.replace('/(tabs)');
       } else {
         // Fallback or secondary factor if needed

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { validateCode, validateEmail, validatePassword } from '@/lib/auth-validation';
+import { posthog } from '@/lib/posthog';
 import { AuthButton } from './AuthButton';
 import { AuthInput } from './AuthInput';
 
@@ -73,6 +74,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       if (res?.error) {
         setErrorMessage(getAuthErrorMessage(res.error));
       } else {
+        posthog?.capture('password_reset_requested');
         setStep('reset');
       }
     } catch (err) {
@@ -124,6 +126,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
       // 3. Finalize session
       await signIn.finalize();
+      posthog?.capture('password_reset_completed');
       onClose();
     } catch (err) {
       setErrorMessage(getAuthErrorMessage(err, 'Failed to reset password. Please check the code and try again.'));

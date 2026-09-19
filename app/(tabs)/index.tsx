@@ -5,6 +5,7 @@ import { HOME_BALANCE, HOME_SUBSCRIPTIONS, HOME_USER, UPCOMING_SUBSCRIPTIONS } f
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import "@/global.css";
+import { posthog } from "@/lib/posthog";
 import { formatCurrency } from "@/lib/utils";
 import { useUser } from "@clerk/expo";
 import dayjs from "dayjs";
@@ -73,7 +74,16 @@ export default function App() {
                     renderItem={({ item }) => (
                         <SubscriptionCard {...item}
                             expanded={expandedSubscriptionId === item.id}
-                            onPress={() => setExpandedSubscriptionId((currentId) => (currentId === item.id ? null : item.id))}
+                            onPress={() => {
+                                const isExpanded = expandedSubscriptionId !== item.id;
+                                posthog?.capture('subscription_details_toggled', {
+                                    is_expanded: isExpanded,
+                                    billing_cycle: item.billing,
+                                    subscription_category: item.category ?? item.plan ?? 'unknown',
+                                    subscription_status: item.status ?? 'unknown',
+                                });
+                                setExpandedSubscriptionId(isExpanded ? item.id : null);
+                            }}
                         />
                     )}
                 />
