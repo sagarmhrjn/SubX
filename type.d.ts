@@ -49,6 +49,8 @@ declare global {
 
     interface ListHeadingProps {
         title: string;
+        onPressViewAll?: () => void;
+        showAction?: boolean;
     }
 }
 

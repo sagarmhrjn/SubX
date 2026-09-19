@@ -1,5 +1,5 @@
 import { formatCurrency, formatStatusLabel, formatSubscriptionDateTime } from '@/lib/utils'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
 import { Image, Pressable, Text, View } from 'react-native'
 
 const SubscriptionCard = ({name, price, currency, icon, billing, color, category, plan, renewalDate, expanded,onPress, paymentMethod , status,startDate}:SubscriptionCardProps) => {
@@ -59,7 +59,7 @@ const SubscriptionCard = ({name, price, currency, icon, billing, color, category
                     </View>
                     <View className="sub-row">
                         <View className="sub-row-copy">
-                            <Text className="sub-label">Status::</Text>
+                            <Text className="sub-label">Status:</Text>
                             <Text className="sub-value" numberOfLines={1} ellipsizeMode="tail">
                                 {status ? formatStatusLabel(status) : "Not provided"}
                             </Text>

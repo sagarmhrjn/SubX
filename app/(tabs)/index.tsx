@@ -12,6 +12,7 @@ import dayjs from "dayjs";
 import { styled } from "nativewind";
 import React from "react";
 import { FlatList, Image, Text, View } from "react-native";
+import { router } from "expo-router";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -60,7 +61,10 @@ export default function App() {
                                 />
                             </View>
 
-                            <ListHeading title="All Subscriptions" />
+                            <ListHeading
+                                title="All Subscriptions"
+                                onPressViewAll={() => router.push('/(tabs)/subscriptions')}
+                            />
 
                         </>
                     )}
