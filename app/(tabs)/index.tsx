@@ -1,25 +1,29 @@
+import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
-import { HOME_BALANCE, HOME_SUBSCRIPTIONS, HOME_USER, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
+import { HOME_BALANCE, HOME_USER, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import "@/global.css";
 import { posthog } from "@/lib/posthog";
 import { formatCurrency } from "@/lib/utils";
+import { useSubscriptions } from "@/context/SubscriptionContext";
 import { useUser } from "@clerk/expo";
 import dayjs from "dayjs";
+import { router } from "expo-router";
 import { styled } from "nativewind";
 import React from "react";
-import { FlatList, Image, Text, View } from "react-native";
-import { router } from "expo-router";
+import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
     const { user } = useUser();
+    const { homeSubscriptions, addSubscription } = useSubscriptions();
     const [expandedSubscriptionId, setExpandedSubscriptionId] = React.useState<string | null>(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
 
     const displayName =
         user?.fullName ||
@@ -28,6 +32,16 @@ export default function App() {
         HOME_USER.name;
 
     const avatarSource = user?.imageUrl ? { uri: user.imageUrl } : images.avatar;
+
+    const handleCreateSubscription = (newSub: Subscription) => {
+        addSubscription(newSub);
+        posthog?.capture('subscription_created', {
+            subscription_name: newSub.name,
+            category: newSub.category ?? 'unknown',
+            billing: newSub.billing,
+            price: newSub.price,
+        });
+    };
 
     return (
         <SafeAreaView className="flex-1 bg-background p-5">
@@ -39,7 +53,12 @@ export default function App() {
                                     <Image source={avatarSource} className="home-avatar"></Image>
                                     <Text className="home-user-name">{displayName}</Text>
                                 </View>
-                                <Image source={icons.add} className="home-add-icon" />
+                                <Pressable
+                                    onPress={() => setIsCreateModalOpen(true)}
+                                    hitSlop={8}
+                                >
+                                    <Image source={icons.add} className="home-add-icon" />
+                                </Pressable>
                             </View>
                             <View className="home-balance-card">
                                 <Text className="home-balanace-label">Balance</Text>
@@ -68,7 +87,7 @@ export default function App() {
 
                         </>
                     )}
-                    data={HOME_SUBSCRIPTIONS}
+                    data={homeSubscriptions}
                     keyExtractor={(item) => item.id}
                     extraData={expandedSubscriptionId}
                     ItemSeparatorComponent={() => <View className="h-4" />}
@@ -90,6 +109,12 @@ export default function App() {
                             }}
                         />
                     )}
+                />
+
+                <CreateSubscriptionModal
+                    visible={isCreateModalOpen}
+                    onClose={() => setIsCreateModalOpen(false)}
+                    onCreateSubscription={handleCreateSubscription}
                 />
         </SafeAreaView>
     );

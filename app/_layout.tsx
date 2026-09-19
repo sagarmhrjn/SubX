@@ -7,6 +7,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { PostHogProvider } from 'posthog-react-native';
 import { posthog } from '@/lib/posthog';
 import { tokenCache } from '@/lib/token-cache';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -116,13 +117,15 @@ export default function RootLayout() {
       </ClerkLoading>
       <ClerkLoaded>
         <PostHogIdentity />
-        {posthog ? (
-          <PostHogProvider client={posthog}>
+        <SubscriptionProvider>
+          {posthog ? (
+            <PostHogProvider client={posthog}>
+              <InitialLayout />
+            </PostHogProvider>
+          ) : (
             <InitialLayout />
-          </PostHogProvider>
-        ) : (
-          <InitialLayout />
-        )}
+          )}
+        </SubscriptionProvider>
       </ClerkLoaded>
     </ClerkProvider>
   );

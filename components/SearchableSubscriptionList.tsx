@@ -4,7 +4,8 @@ import { posthog } from '@/lib/posthog';
 import { formatCurrency } from '@/lib/utils';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import React, { useMemo, useState } from 'react';
+import { SubscriptionContext } from '@/context/SubscriptionContext';
+import React, { useContext, useMemo, useState } from 'react';
 import {
   FlatList,
   ScrollView,
@@ -23,12 +24,16 @@ export interface SearchableSubscriptionListProps {
 }
 
 const SearchableSubscriptionList: React.FC<SearchableSubscriptionListProps> = ({
-  subscriptions = ALL_SUBSCRIPTIONS,
+  subscriptions: propSubscriptions,
   headerTitle = 'All Subscriptions',
   searchPlaceholder = 'Search subscriptions, plans, categories...',
   showMetrics = true,
   onSelectSubscription,
 }) => {
+  const subscriptionContext = useContext(SubscriptionContext);
+  const subscriptions =
+    propSubscriptions ?? subscriptionContext?.subscriptions ?? ALL_SUBSCRIPTIONS;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
